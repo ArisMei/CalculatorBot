@@ -3,12 +3,29 @@ import telebot
 from dotenv import load_dotenv
 from telebot import types
 import requests
+import random
+
 
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
 
 # Obtener el token de acceso del bot desde las variables de entorno
 TOKEN = os.environ.get("TOKEN")
+YOUR_USER_ID = int(os.environ.get("YOUR_USER_ID"))
+
+sticker_ids = ["CAACAgIAAxkBAAEJR1lkhbhylT-AoicmnnPUOAv4fKVoVgACGwkAAhhC7gjcuaXV80quyC8E", 
+               "CAACAgIAAxkBAAEJR1tkhbhzsh0oc61Qi1LA1bQTxYzuWQACGQkAAhhC7gjnA3EwBUHY7y8E",
+                 "CAACAgIAAxkBAAEJR1xkhbhz0fQNP09mh4Tw3eLbnC5-EAACHgkAAhhC7gj5WNnuHSGcIS8E", 
+                 "CAACAgIAAxkBAAEJR1ZkhbhwqibOGosIJ2NjKWYepp-7HgACGAkAAhhC7ggHge2pz_Yyay8E",
+                 "CAACAgIAAxkBAAEJR1VkhbhwdqZApn7DjYPXL12Zdob4MQACMgkAAhhC7ggR-4x175jn2i8E",
+                 "CAACAgIAAxkBAAEJR2FkhbkLEYb89Iz4nXEjw4RbeePLPAACIgkAAhhC7giwkQ5lZwxHoC8E",
+                 "CAACAgIAAxkBAAEJR2NkhbkhkMdJGiYaGoxBXkwjJKQvLgACAQEAAladvQoivp8OuMLmNC8E",
+                 "CAACAgIAAxkBAAEJR2VkhbkyeC5_9HlKBDTkNE_0qoDm7wAC9wADVp29CgtyJB1I9A0wLwQ",
+                 "CAACAgIAAxkBAAEJR2dkhbmpyLeGlb4beSoUH-JaAcV2RQACSgIAAladvQrJasZoYBh68C8E",
+                 "CAACAgIAAxkBAAEJR2lkhbnY8ZHHzEkcOagzziJzuLC4OwACryUAApuicEu4OcV9u14IZi8E",
+                 "CAACAgIAAxkBAAEJR2tkhbnqkBXdUjjoQ1TzsOZeRyWGmwAC9gADVp29CvfbTiFAPqWKLwQ",
+                 "CAACAgIAAxkBAAEJR25khbn-D1JFMg4Mntyoe-SmMp5nvwACTwIAAladvQrPysaJZ3VllS8E"]  # Add the sticker IDs you want to use
+
 
 # Crear una instancia del bot
 bot = telebot.TeleBot(TOKEN)
@@ -19,14 +36,23 @@ conversation_params = {}
 # Handler para el comando /start o al iniciar el bot
 @bot.message_handler(commands=['start'])
 def start_handler(message):
+    if message.from_user.id != YOUR_USER_ID:
+        print("Unauthorized user. Exiting program.")
+        exit()
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     calculate_button = types.KeyboardButton("CALCULATE")
     markup.add(calculate_button)
+
+    random_sticker_id = random.choice(sticker_ids)
+    bot.send_sticker(message.chat.id, random_sticker_id, reply_markup=markup)
     bot.reply_to(message, "¡Hola! Puedes iniciar la conversación con el bot utilizando el botón CALCULATE.", reply_markup=markup)
 
 # Handler para manejar el botón CALCULATE
 @bot.message_handler(func=lambda message: message.text == "CALCULATE", content_types=['text'])
 def calculate_button_handler(message):
+    if message.from_user.id != YOUR_USER_ID:
+        print("Unauthorized user. Exiting program.")
+        exit()
     calculate_handler(message)
 
 # Handler para el comando /calculate
@@ -85,7 +111,10 @@ def process_operator(call):
             response = requests.get(url)
             result = response.json()
             if response.status_code == 200:
-                bot.reply_to(message, f"El resultado es: {result}")
+                bot.send_message(message.chat.id, f"El resultado es: {result}")
+                bot.send_message(message.chat.id, "Trabajo terminado, firmado:")
+                bot.send_sticker(message.chat.id, "CAACAgIAAxkBAAEJR3Zkhbo_zVOjLQ34S47pZSB0FaxrvAACfgEAAgeGFQeoscUZz8zsNS8E")
+                bot.send_message(message.chat.id, "Aris_Mentta")
             else:
                 bot.reply_to(message, "Ha ocurrido un error al ejecutar la función.")
         except ValueError:
